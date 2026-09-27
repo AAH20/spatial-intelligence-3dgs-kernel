@@ -1,0 +1,42 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "spatial-intelligence-3dgs-kernel"
+version = "0.1.0"
+description = "Algorithmic Solvers for 3D Gaussian Splatting Pruning, Robust SE(3) Pose Graph Optimization, and Spatial World Models"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "Apache-2.0"}
+authors = [
+    {name = "Autonomous Spatial Intelligence Group", email = "spatial@world-models.internal"}
+]
+keywords = [
+    "spatial-intelligence",
+    "3d-gaussian-splatting",
+    "nerf",
+    "slam",
+    "bundle-adjustment",
+    "pose-graph",
+    "frustum-culling",
+    "next-best-view",
+    "mesh-decimation",
+    "world-models",
+    "np-hard"
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Image Processing",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence"
+]
+
+[project.scripts]
+spatial-kernel = "spatial_intelligence_3dgs_kernel.cli:main"
