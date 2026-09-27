@@ -12,35 +12,42 @@ A zero-external-dependency, sub-millisecond algorithmic kernel for **Spatial Int
 
 ## Solvers & Mathematical Formulations
 
-```
-                              ┌──────────────────────────────────────────────┐
-                              │     Raw Scene (Millions of 3D Gaussians)     │
-                              └──────────────────────┬───────────────────────┘
-                                                     │
-                                                     ▼
-                                      [Submodular Knapsack Pruner]
-                                 (Voxel Facility Dispersion: 60% VRAM Cut)
-                                                     │
-                                                     ▼
-                              ┌──────────────────────────────────────────────┐
-                              │          Active Sensor Frustum               │
-                              └──────────────────────┬───────────────────────┘
-                                                     │
-                         ┌───────────────────────────┴───────────────────────────┐
-                         ▼                                                       ▼
-            [6-Plane Frustum Culler]                                [Hierarchical Occlusion Culler]
-       (Depth & Field-of-View Clipping)                         (Front-to-Back Alpha Saturation >= 0.98)
-                         │                                                       │
-                         └───────────────────────────┬───────────────────────────┘
-                                                     │
-                                                     ▼
-                                      [Robust SE(3) Pose Graph BA]
-                                 (Huber M-Estimator Loop Outlier Rejection)
-                                                     │
-                         ┌───────────────────────────┴───────────────────────────┐
-                         ▼                                                       ▼
-           [Next-Best-View Art Gallery]                               [Topological Mesh Decimator]
-         (Shannon Entropy Frontier Max)                             (QEM Invariant Edge Collapse)
+```mermaid
+flowchart TD
+    subgraph SceneRepresentation["1. Volumetric Scene Representation"]
+        RAW["Raw 3D Point Cloud<br>Millions of Unbounded 3D Gaussians"]
+        FLOATERS["Low-Opacity Floaters<br>Alpha &lt; 0.05 Artifacts"]
+    end
+
+    subgraph MemoryOptimization["2. Memory & VRAM Compression Layer"]
+        PRUNER["GaussianSubmodularPruner<br>Submodular Facility Dispersion Knapsack<br>max Sum VisualMass(u) * exp(-||p_u - p_v||^2 / 2sigma^2)<br><b>60.0% VRAM Footprint Reduction</b>"]
+    end
+
+    subgraph RealTimeVisibility["3. Real-Time Viewport Visibility Pipeline"]
+        CAMERA["Camera State & Frustum<br>Pos C, Dir L, Up U, FOV theta, Near/Far"]
+        FRUSTUM["6-Plane Frustum Culler<br>Analytical Half-Space Clipping<br>n_k . (p_g - C) + d_k + 3sigma_max &gt;= 0"]
+        OCCLUSION["Hierarchical Occlusion Culler<br>Spherical Depth-Buffer Alpha Grid<br>Front-to-Back Opacity Saturation &gt;= 0.98<br><b>2.19x Render Speedup</b>"]
+    end
+
+    subgraph SpatialStateEstimation["4. Spatial SLAM & Trajectory Optimization"]
+        TRAJ["Robot SE(3) Pose Graph<br>Odometry Chains & Loop Closure Hypotheses"]
+        BA["Robust SE(3) Pose Graph BA<br>Huber M-Estimator & Outlier Pruning<br>min Sum rho_delta(||Log_SE3(T_ij^-1 T_i^-1 T_j)||_Omega)<br><b>Eliminates Map Warping Outliers</b>"]
+    end
+
+    subgraph ActivePerceptionAndMeshing["5. Active Exploration & Surface Synthesis"]
+        NBV["NextBestViewArtGalleryPlanner<br>Volumetric Shannon Entropy Maximization<br>max H(c | M_t) - lambda * D_kinematic(p_curr, c)<br><b>97.67% Frontier Discovery</b>"]
+        QEM["TopologicalMeshDecimator<br>QEM Edge Contraction: Delta(v_bar) = v_bar^T (Q1 + Q2) v_bar<br>Euler Invariant Preservation (chi = V - E + F)<br><b>100% 2-Manifold Topology Preserved</b>"]
+    end
+
+    RAW --> PRUNER
+    FLOATERS -. Filter Out .-> PRUNER
+    PRUNER --> FRUSTUM
+    CAMERA --> FRUSTUM
+    FRUSTUM --> OCCLUSION
+    OCCLUSION --> BA
+    TRAJ --> BA
+    BA --> NBV
+    BA --> QEM
 ```
 
 ### 1. Submodular Knapsack Gaussian Pruner (`core/gaussian_submodular_pruner.py`)
